@@ -9,3 +9,6 @@ class Alert(Base):
     location = Column(String(255))
     timestamp = Column(TIMESTAMP)
     media_reference = Column(Text)
+    statut = Column(String, default="Non traité")  # Nouvelle colonne
+
+

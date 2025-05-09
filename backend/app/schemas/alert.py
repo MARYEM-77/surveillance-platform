@@ -7,6 +7,7 @@ class AlertBase(BaseModel):
     location: Optional[str]
     timestamp: Optional[datetime]
     media_reference: Optional[str]
+    statut: Optional[str]  # ✅ Ajoute ce champ
 
 class AlertCreate(AlertBase):
     alert_id: str
