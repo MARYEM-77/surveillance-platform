@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FlameIcon as Fire, PenIcon as Gun, User, AlertTriangle, ArrowRight } from "lucide-react"
+import { FlameIcon as Fire, PenIcon as Gun, User, AlertTriangle, ArrowRight, CheckCircle, Clock } from "lucide-react"
 import { DashboardChart } from "@/components/dashboard-chart"
 import { IncidentCard } from "@/components/incident-card"
 import { useEffect, useState } from 'react';
@@ -118,52 +118,50 @@ export default function Dashboard() {
             </Card>
             <Card className="col-span-3">
               <CardHeader>
-                <CardTitle>Incidents Récents</CardTitle>
-                <CardDescription>Derniers incidents détectés en temps réel</CardDescription>
+                <CardTitle>Statut des Incidents</CardTitle>
+                <CardDescription>Vue d'ensemble des incidents traités et non traités</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <Alert className="border-rose-500/50 bg-rose-500/10">
-                    <Fire className="h-4 w-4 text-rose-500" />
-                    <AlertTitle className="flex items-center gap-2">
-                      Détection de feu
-                      <Badge variant="outline" className="ml-2">
-                        Urgent
-                      </Badge>
-                    </AlertTitle>
-                    <AlertDescription className="flex justify-between">
-                      <span>Caméra: Entrée Principale</span>
-                      <span className="text-xs text-muted-foreground">Il y a 5 min</span>
-                    </AlertDescription>
-                  </Alert>
+                <div className="grid gap-6">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-muted-foreground">Incidents Traités</h3>
+                      <Badge variant="outline" className="bg-green-500/10 text-green-500 border-green-500/20">Terminés</Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
+                        <CheckCircle className="h-6 w-6 text-green-500" />
+                      </div>
+                      <div>
+                        <div className="text-3xl font-bold">42</div>
+                        <p className="text-xs text-muted-foreground">+12 depuis hier</p>
+                      </div>
+                    </div>
+                    <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500 w-[70%]" />
+                    </div>
+                    <p className="text-xs text-muted-foreground">70% des incidents totaux</p>
+                  </div>
 
-                  <Alert className="border-amber-500/50 bg-amber-500/10">
-                    <Gun className="h-4 w-4 text-amber-500" />
-                    <AlertTitle className="flex items-center gap-2">
-                      Détection d'arme
-                      <Badge variant="outline" className="ml-2">
-                        Critique
-                      </Badge>
-                    </AlertTitle>
-                    <AlertDescription className="flex justify-between">
-                      <span>Caméra: Parking Sud</span>
-                      <span className="text-xs text-muted-foreground">Il y a 23 min</span>
-                    </AlertDescription>
-                  </Alert>
-
-                  <Alert className="border-violet-500/50 bg-violet-500/10">
-                    <User className="h-4 w-4 text-violet-500" />
-                    <AlertTitle className="flex items-center gap-2">
-                      Visage sensible détecté
-                      <Badge variant="outline" className="ml-2">
-                        Modéré
-                      </Badge>
-                    </AlertTitle>
-                    <AlertDescription className="flex justify-between">
-                      <span>Caméra: Hall d'Accueil</span>
-                      <span className="text-xs text-muted-foreground">Il y a 47 min</span>
-                    </AlertDescription>
-                  </Alert>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-muted-foreground">Incidents Non Traités</h3>
+                      <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20">En attente</Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+                        <Clock className="h-6 w-6 text-amber-500" />
+                      </div>
+                      <div>
+                        <div className="text-3xl font-bold">18</div>
+                        <p className="text-xs text-muted-foreground">+5 depuis hier</p>
+                      </div>
+                    </div>
+                    <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-500 w-[30%]" />
+                    </div>
+                    <p className="text-xs text-muted-foreground">30% des incidents totaux</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
