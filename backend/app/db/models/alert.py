@@ -12,3 +12,4 @@ class Alert(Base):
     statut = Column(String, default="Non traité")  # Nouvelle colonne
 
 
+
