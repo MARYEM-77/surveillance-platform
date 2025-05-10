@@ -13,6 +13,9 @@ interface IncidentCardProps {
   location: string
   time: string
   severity: SeverityType
+  image?: string;
+  alertId?: string;
+  onTreat?: () => void; 
 }
 
 export function IncidentCard({ type, title, location, time, severity, ...props }: IncidentCardProps) {
@@ -91,10 +94,11 @@ export function IncidentCard({ type, title, location, time, severity, ...props }
           <MoreHorizontal className="h-4 w-4 mr-1" />
           Détails
         </Button>
-        <Button size="sm" className={`flex-1 ${getSeverityColor()}`}>
-          <CheckCircle className="h-4 w-4 mr-1" />
-          Traiter
-        </Button>
+        <Button size="sm" className={`flex-1 ${getSeverityColor()}`} onClick={props.onTreat}>
+  <CheckCircle className="h-4 w-4 mr-1" />
+  Traiter
+</Button>
+
       </CardFooter>
     </Card>
   )

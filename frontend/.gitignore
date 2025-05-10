@@ -3,6 +3,13 @@
 # dependencies
 /node_modules
 
+#pycache
+__pycache__/
+
+#db
+alerts.db
+*.sqlite3
+*.sqlite
 # next.js
 /.next/
 /out/

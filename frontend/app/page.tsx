@@ -20,8 +20,12 @@ import {
   Clock,
 } from "lucide-react";
 import { DashboardChart } from "@/components/dashboard-chart";
+import { DashboardChartMonth } from "@/components/dashboard-chart-month";
+import { DashboardChartWeek } from "@/components/dashboard-chart-week";
 import { IncidentCard } from "@/components/incident-card";
 import { useEffect, useState } from "react";
+
+import { AlertDialogPopup } from "@/components/alert-dialog";
 
 export default function Dashboard() {
   const [stats, setStats] = useState<Record<string, number>>({});
@@ -35,6 +39,48 @@ export default function Dashboard() {
     percentageTreated: 0,
     percentageUntreated: 0,
   });
+
+const [selectedAlert, setSelectedAlert] = useState<AlertType | null>(null);
+const [showAll, setShowAll] = useState(false);
+
+
+//code jihane ajouté 
+
+
+const getRelativeTime = (timestamp: string) => {
+  const diffMs = Date.now() - new Date(timestamp).getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHours = Math.floor(diffMin / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffDays > 0) return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
+if (diffHours > 0) return `Il y a ${diffHours} heure${diffHours > 1 ? 's' : ''}`;
+if (diffMin > 0) return `Il y a ${diffMin} min`;
+
+  return "À l'instant";
+};
+
+
+
+
+
+
+  type AlertType = {
+  alert_id: string;
+  detection_type: string;
+  location: string;
+  timestamp: string;
+  media_reference: string;
+};
+
+const [alerts, setAlerts] = useState<AlertType[]>([]);
+
+
+//
+
+
+
 
   useEffect(() => {
     fetch("http://localhost:8000/alerts/stats/")
@@ -78,15 +124,28 @@ export default function Dashboard() {
       });
   }, [selectedTab]);
 
+useEffect(() => {
+  fetch("http://localhost:8000/alerts/unresolved")
+    .then((res) => res.json())
+    .then((data) => setAlerts(data))
+    .catch((err) => console.error("Erreur chargement alertes :", err));
+}, []);
+
+
+const getSeverity = (type: string): "urgent" | "critical" | "moderate" => {
+  if (type === "feu") return "urgent";
+  if (type === "arme") return "critical";
+  return "moderate";
+};
+
+
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Tableau de Bord</h2>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            Exporter
-          </Button>
-          <Button size="sm">Actualiser</Button>
+          
         </div>
       </div>
 
@@ -337,10 +396,10 @@ export default function Dashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
               <CardHeader>
-                <CardTitle>Incidents par Heure</CardTitle>
+                <CardTitle>Incidents par Semaine</CardTitle>
               </CardHeader>
               <CardContent className="pl-2">
-                <DashboardChart />
+                <DashboardChartWeek />
               </CardContent>
             </Card>
             <Card className="col-span-3">
@@ -506,10 +565,10 @@ export default function Dashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
               <CardHeader>
-                <CardTitle>Incidents par Heure</CardTitle>
+                <CardTitle>Incidents par Mois</CardTitle>
               </CardHeader>
               <CardContent className="pl-2">
-                <DashboardChart />
+                <DashboardChartMonth />
               </CardContent>
             </Card>
             <Card className="col-span-3">
@@ -606,36 +665,42 @@ export default function Dashboard() {
         </TabsContent>
       </Tabs>
 
-      <h3 className="text-xl font-semibold mt-6 mb-4">Incidents en Direct</h3>
+     <h3 className="text-xl font-semibold mt-6 mb-4">Incidents en Direct</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <IncidentCard
-          type="fire"
-          title="Détection de feu"
-          location="Entrée Principale"
-          time="Il y a 5 min"
-          severity="urgent"
-        />
-        <IncidentCard
-          type="weapon"
-          title="Détection d'arme"
-          location="Parking Sud"
-          time="Il y a 23 min"
-          severity="critical"
-        />
-        <IncidentCard
-          type="face"
-          title="Visage sensible détecté"
-          location="Hall d'Accueil"
-          time="Il y a 47 min"
-          severity="moderate"
-        />
+        {(showAll ? alerts : alerts.slice(0, 3)).map((alert) => (
+          <IncidentCard
+            key={alert.alert_id}
+            type={
+              alert.detection_type === "feu"
+                ? "fire"
+                : alert.detection_type === "arme"
+                ? "weapon"
+                : "face"
+            }
+            title={
+              alert.detection_type === "feu"
+                ? "Détection de feu"
+                : alert.detection_type === "arme"
+                ? "Détection d'arme"
+                : "Visage sensible détecté"
+            }
+            location={alert.location}
+            time={getRelativeTime(alert.timestamp)}
+            severity={getSeverity(alert.detection_type)}
+            image={`http://localhost:8000/${alert.media_reference}`}
+            alertId={alert.alert_id}
+            onTreat={() => setSelectedAlert(alert)}
+          />
+        ))}
       </div>
 
       <div className="mt-6">
-        <Button variant="outline" className="w-full">
-          Voir tous les incidents <ArrowRight className="ml-2 h-4 w-4" />
+        <Button variant="outline" className="w-full" onClick={() => setShowAll(!showAll)}>
+          {showAll ? "Afficher moins" : "Voir tous les incidents"} <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
+
+      <AlertDialogPopup alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
     </div>
   );
 }
