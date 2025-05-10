@@ -210,3 +210,106 @@ def get_delta_by_status(db: Session, interval: str):
     }
 
     return delta
+
+#partie Yassmine
+# get alerts by 2hours
+from sqlalchemy import extract
+from collections import defaultdict
+
+def get_alerts_by_hour(db: Session):
+    today = datetime.now().date()
+
+    results = db.query(
+        extract("hour", AlertModel.timestamp).label("hour"),
+        AlertModel.detection_type,
+        func.count(AlertModel.alert_id)
+    ).filter(func.date(AlertModel.timestamp) == today)\
+     .group_by("hour", AlertModel.detection_type)\
+     .order_by("hour").all()
+
+    # Grouper par tranches de 2 heures
+    hours_data = defaultdict(lambda: {"feu": 0, "arme": 0, "criminel": 0})
+
+    for hour, detection_type, count in results:
+        two_hour_slot = (int(hour) // 2) * 2  # Ex: 3h → 2h, 5h → 4h
+        if detection_type in ["feu", "arme", "criminel"]:
+            hours_data[two_hour_slot][detection_type] += count
+
+    formatted_data = []
+    for hour in range(0, 24, 2):  # seulement 00, 02, ..., 22
+        formatted_data.append({
+            "name": f"{hour:02d}:00",
+            "feu": hours_data[hour]["feu"],
+            "arme": hours_data[hour]["arme"],
+            "criminel": hours_data[hour]["criminel"]
+        })
+
+    return formatted_data
+#get alerts by week
+
+def get_alerts_by_weekday(db: Session):
+    today = datetime.now().date()
+    start_of_week = today - timedelta(days=today.weekday())  # Lundi de la semaine courante
+
+    results = db.query(
+        extract("dow", AlertModel.timestamp).label("weekday"),
+        AlertModel.detection_type,
+        func.count(AlertModel.alert_id)
+    ).filter(func.date(AlertModel.timestamp) >= start_of_week)\
+     .filter(func.date(AlertModel.timestamp) <= today)\
+     .group_by("weekday", AlertModel.detection_type)\
+     .order_by("weekday").all()
+
+    # Adapter au nom des jours (en français ici)
+    day_names = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"]
+    week_data = defaultdict(lambda: {"feu": 0, "arme": 0, "criminel": 0})
+
+    for weekday, detection_type, count in results:
+        day_index = int(weekday)
+        if detection_type in ["feu", "arme", "criminel"]:
+            week_data[day_index][detection_type] += count
+
+    formatted_data = []
+    for i in range(7):
+        formatted_data.append({
+            "name": day_names[i],
+            "feu": week_data[i]["feu"],
+            "arme": week_data[i]["arme"],
+            "criminel": week_data[i]["criminel"]
+        })
+
+    return formatted_data
+#get alerts by month
+from calendar import monthrange
+
+def get_alerts_by_day_of_month(db: Session):
+    today = datetime.now()
+    year = today.year
+    month = today.month
+    num_days = monthrange(year, month)[1]  # nombre de jours dans le mois
+
+    results = db.query(
+        extract("day", AlertModel.timestamp).label("day"),
+        AlertModel.detection_type,
+        func.count(AlertModel.alert_id)
+    ).filter(extract("month", AlertModel.timestamp) == month)\
+     .filter(extract("year", AlertModel.timestamp) == year)\
+     .group_by("day", AlertModel.detection_type)\
+     .order_by("day").all()
+
+    day_data = defaultdict(lambda: {"feu": 0, "arme": 0, "criminel": 0})
+
+    for day, detection_type, count in results:
+        if detection_type in ["feu", "arme", "criminel"]:
+            day_data[int(day)][detection_type] += count
+
+    formatted_data = []
+    for day in range(1, num_days + 1):
+        formatted_data.append({
+            "name": f"{day:02d}",
+            "feu": day_data[day]["feu"],
+            "arme": day_data[day]["arme"],
+            "criminel": day_data[day]["criminel"]
+        })
+
+    return formatted_data

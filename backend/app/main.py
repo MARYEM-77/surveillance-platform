@@ -14,7 +14,6 @@ from fastapi import Query
 from app.crud.alert import get_daily_kpis
 from app.crud.alert import get_interval_stats, get_interval_percentages
 from app.crud.alert import get_delta_by_status
-from app.crud.alert import get_date_range
 
 
 app = FastAPI()
@@ -75,3 +74,24 @@ def get_alert_percentages(interval: str = Query("jour"), db: Session = Depends(g
 @app.get("/alerts/status-delta/")
 def alert_status_delta(interval: str = Query(..., enum=["jour", "semaine", "mois"]), db: Session = Depends(get_db)):
     return get_delta_by_status(db, interval)
+
+#partie yassmine: route pour les alertes par heure
+from app.crud.alert import get_alerts_by_hour
+
+@app.get("/alerts/by-hour/")
+def alerts_by_hour(db: Session = Depends(get_db)):
+    return get_alerts_by_hour(db)
+
+# route pour les alertes par jour
+from app.crud.alert import get_alerts_by_weekday
+
+@app.get("/alerts/by-weekday/")
+def alerts_by_weekday(db: Session = Depends(get_db)):
+    return get_alerts_by_weekday(db)
+
+# route pour les alertes par mois
+from app.crud.alert import get_alerts_by_day_of_month
+
+@app.get("/alerts/by-day-of-month/")
+def alerts_by_day_of_month(db: Session = Depends(get_db)):
+    return get_alerts_by_day_of_month(db)

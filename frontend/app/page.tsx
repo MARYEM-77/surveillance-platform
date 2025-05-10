@@ -20,6 +20,8 @@ import {
   Clock,
 } from "lucide-react";
 import { DashboardChart } from "@/components/dashboard-chart";
+import { DashboardChartMonth } from "@/components/dashboard-chart-month";
+import { DashboardChartWeek } from "@/components/dashboard-chart-week";
 import { IncidentCard } from "@/components/incident-card";
 import { useEffect, useState } from "react";
 
@@ -337,10 +339,10 @@ export default function Dashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
               <CardHeader>
-                <CardTitle>Incidents par Heure</CardTitle>
+                <CardTitle>Incidents par Semaine</CardTitle>
               </CardHeader>
               <CardContent className="pl-2">
-                <DashboardChart />
+                <DashboardChartWeek />
               </CardContent>
             </Card>
             <Card className="col-span-3">
@@ -506,10 +508,10 @@ export default function Dashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
               <CardHeader>
-                <CardTitle>Incidents par Heure</CardTitle>
+                <CardTitle>Incidents par Mois</CardTitle>
               </CardHeader>
               <CardContent className="pl-2">
-                <DashboardChart />
+                <DashboardChartMonth />
               </CardContent>
             </Card>
             <Card className="col-span-3">
