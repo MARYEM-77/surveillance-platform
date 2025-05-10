@@ -79,6 +79,16 @@ def get_delta_by_type(db: Session, interval: str):
     return delta
 
 
+#retourner alertes non traitées
+from sqlalchemy import or_
+
+
+def get_unresolved_alerts(db: Session):
+    return db.query(AlertModel).filter(
+        or_(AlertModel.statut == None, AlertModel.statut == "Non traité")
+    ).all()
+
+
 #code MAryem 
 
 def get_daily_kpis(db: Session):

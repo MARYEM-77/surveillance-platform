@@ -16,6 +16,8 @@ from app.crud.alert import get_interval_stats, get_interval_percentages
 from app.crud.alert import get_delta_by_status
 
 
+import sqlite3
+
 app = FastAPI()
 
 app.add_middleware(
@@ -53,6 +55,12 @@ def get_alerts_delta(interval: str = Query("jour"), db: Session = Depends(get_db
     return get_delta_by_type(db, interval)
 
 
+
+from app.crud.alert import get_unresolved_alerts  
+
+@app.get("/alerts/unresolved", response_model=list[Alert])
+def read_unresolved_alerts(db: Session = Depends(get_db)):
+    return get_unresolved_alerts(db)
 
 #Partie MAryem
 
