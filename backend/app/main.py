@@ -23,6 +23,9 @@ from typing import Optional
 
 import sqlite3
 
+from fastapi import HTTPException
+
+
 app = FastAPI()
 
 app.add_middleware(
@@ -71,7 +74,7 @@ def read_unresolved_alerts(db: Session = Depends(get_db)):
 #rendre les alertes non traitées => traitées 
 
 class AlertUpdate(BaseModel):
-    statut: Optional[str] = "traitée"
+    statut: Optional[str] = "Traité"
 
 @app.patch("/alerts/{alert_id}/")
 def update_alert_status(alert_id: str, update: AlertUpdate):

@@ -45,6 +45,31 @@ const [selectedAlert, setSelectedAlert] = useState<AlertType | null>(null);
 const [showAll, setShowAll] = useState(false);
 
 
+//fct pour reload automatiquement la page : 
+
+const reloadStatusData = () => {
+  Promise.all([
+    fetch(`http://localhost:8000/alerts/interval-stats/?interval=${selectedTab}`).then((res) => res.json()),
+    fetch(`http://localhost:8000/alerts/pourcentages/?interval=${selectedTab}`).then((res) => res.json()),
+    fetch(`http://localhost:8000/alerts/status-delta/?interval=${selectedTab}`).then((res) => res.json()),
+  ])
+    .then(([status, percentages, deltas]) => {
+      setStatusData({
+        treated: status["traite"],
+        untreated: status["non_traite"],
+        deltaTreated: deltas["Traité"],
+        deltaUntreated: deltas["Non traité"],
+        percentageTreated: percentages["traite"],
+        percentageUntreated: percentages["non_traite"],
+      });
+    })
+    .catch((error) => {
+      console.error("Erreur lors du rechargement des données :", error);
+    });
+};
+
+
+
 //code jihane ajouté 
 
 
@@ -72,12 +97,13 @@ const handleTreatAlert = async (alert: AlertType) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ statut: "traitée" }),
+      body: JSON.stringify({ statut: "Traité" }),
     });
 
     if (response.ok) {
       setAlerts((prev) => prev.filter((a) => a.alert_id !== alert.alert_id));
       setSelectedAlert(null);
+      reloadStatusData();
     } else {
       console.error("Échec de la mise à jour du statut de l'alerte");
     }
