@@ -94,10 +94,15 @@ export function IncidentCard({ type, title, location, time, severity, ...props }
           <MoreHorizontal className="h-4 w-4 mr-1" />
           Détails
         </Button>
-        <Button size="sm" className={`flex-1 ${getSeverityColor()}`} onClick={props.onTreat}>
+        <Button
+  size="sm"
+  className={`flex-1 ${getSeverityColor()}`}
+  onClick={props.onTreat} // ← ici
+>
   <CheckCircle className="h-4 w-4 mr-1" />
   Traiter
 </Button>
+
 
       </CardFooter>
     </Card>

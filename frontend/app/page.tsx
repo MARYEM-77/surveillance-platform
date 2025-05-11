@@ -25,7 +25,8 @@ import { DashboardChartWeek } from "@/components/dashboard-chart-week";
 import { IncidentCard } from "@/components/incident-card";
 import { useEffect, useState } from "react";
 
-import { AlertDialogPopup } from "@/components/alert-dialog";
+
+import { AlertDialogPopup } from "@/components/AlertDialogPopup";
 
 export default function Dashboard() {
   const [stats, setStats] = useState<Record<string, number>>({});
@@ -61,7 +62,32 @@ if (diffMin > 0) return `Il y a ${diffMin} min`;
   return "À l'instant";
 };
 
+//code ajouté par jihane pour le traitement des alertes non traitées : 
 
+
+const handleTreatAlert = async (alert: AlertType) => {
+  try {
+    const response = await fetch(`http://localhost:8000/alerts/${alert.alert_id}/`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ statut: "traitée" }),
+    });
+
+    if (response.ok) {
+      setAlerts((prev) => prev.filter((a) => a.alert_id !== alert.alert_id));
+      setSelectedAlert(null);
+    } else {
+      console.error("Échec de la mise à jour du statut de l'alerte");
+    }
+  } catch (error) {
+    console.error("Erreur lors de la requête PATCH :", error);
+  }
+};
+
+
+//
 
 
 
@@ -700,7 +726,12 @@ const getSeverity = (type: string): "urgent" | "critical" | "moderate" => {
         </Button>
       </div>
 
-      <AlertDialogPopup alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
+      <AlertDialogPopup
+  alert={selectedAlert}
+  onClose={() => setSelectedAlert(null)}
+  onTreatConfirm={handleTreatAlert}
+/>
+
     </div>
   );
 }

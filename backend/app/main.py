@@ -18,7 +18,8 @@ from app.crud.alert import get_interval_stats, get_interval_percentages
 from app.crud.alert import get_delta_by_status
 from app.crud.alert import get_ALLalerts
 
-
+from pydantic import BaseModel
+from typing import Optional
 
 import sqlite3
 
@@ -58,13 +59,35 @@ def get_alert_stats(db: Session = Depends(get_db)):
 def get_alerts_delta(interval: str = Query("jour"), db: Session = Depends(get_db)):
     return get_delta_by_type(db, interval)
 
-
+#récupérer les alertes non traitées
 
 from app.crud.alert import get_unresolved_alerts  
 
 @app.get("/alerts/unresolved", response_model=list[Alert])
 def read_unresolved_alerts(db: Session = Depends(get_db)):
     return get_unresolved_alerts(db)
+
+
+#rendre les alertes non traitées => traitées 
+
+class AlertUpdate(BaseModel):
+    statut: Optional[str] = "traitée"
+
+@app.patch("/alerts/{alert_id}/")
+def update_alert_status(alert_id: str, update: AlertUpdate):
+    conn = sqlite3.connect("alerts.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM alerts WHERE alert_id = ?", (alert_id,))
+    result = cursor.fetchone()
+    if not result:
+        conn.close()
+        raise HTTPException(status_code=404, detail="Alerte non trouvée")
+
+    cursor.execute("UPDATE alerts SET statut = ? WHERE alert_id = ?", (update.statut, alert_id))
+    conn.commit()
+    conn.close()
+    return {"message": f"Alerte {alert_id} marquée comme {update.statut}"}
+
 
 #Partie MAryem
 
@@ -107,6 +130,8 @@ from app.crud.alert import get_alerts_by_day_of_month
 @app.get("/alerts/by-day-of-month/")
 def alerts_by_day_of_month(db: Session = Depends(get_db)):
     return get_alerts_by_day_of_month(db)
+
+
 
 
 #PArtie MAryem (2eme page)
