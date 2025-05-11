@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 from app.db.session import SessionLocal
 from app.schemas.alert import Alert, AlertCreate
 from app.crud.alert import create_alert, get_alerts
-
+from typing import Optional
+from datetime import datetime, timedelta
+from datetime import date
 from app.crud.alert import count_alerts_by_type
 from fastapi.middleware.cors import CORSMiddleware 
 from app.crud.alert import get_delta_by_type
@@ -14,6 +16,8 @@ from fastapi import Query
 from app.crud.alert import get_daily_kpis
 from app.crud.alert import get_interval_stats, get_interval_percentages
 from app.crud.alert import get_delta_by_status
+from app.crud.alert import get_ALLalerts
+
 
 
 import sqlite3
@@ -103,3 +107,44 @@ from app.crud.alert import get_alerts_by_day_of_month
 @app.get("/alerts/by-day-of-month/")
 def alerts_by_day_of_month(db: Session = Depends(get_db)):
     return get_alerts_by_day_of_month(db)
+
+
+#PArtie MAryem (2eme page)
+
+@app.get("/alerts/AllaLerts")
+def read_alerts(
+    db: Session = Depends(get_db),
+    search: Optional[str] = Query(None),
+    type: Optional[str] = Query(None),
+    statut: Optional[str] = Query(None),
+    date_from: Optional[date] = Query(None),
+    date_to: Optional[date] = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+):
+    results, total = get_ALLalerts(
+        db=db,
+        search=search,
+        type=type,
+        date_from=date_from,
+        date_to=date_to,
+        skip=skip,
+        limit=limit,
+    )
+
+    return {
+        "data": [
+            {
+                "alert_id": alert.alert_id,
+                "detection_type": alert.detection_type,
+                "location": alert.location,
+                "timestamp": alert.timestamp.isoformat(),
+                "media_reference": alert.media_reference,
+                "statut": alert.statut,
+            }
+            for alert in results
+        ],
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+    }

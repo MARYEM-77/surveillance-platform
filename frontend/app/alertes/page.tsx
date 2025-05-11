@@ -1,72 +1,188 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Calendar, CheckCircle, Filter, FlameIcon as Fire, PenIcon as Gun, Plus, Search, User, X } from "lucide-react"
-import Image from "next/image"
+"use client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
+  Calendar,
+  CheckCircle,
+  Filter,
+  FlameIcon as Fire,
+  PenIcon as Gun,
+  Plus,
+  Search,
+  User,
+  X,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+
+type Alert = {
+  alert_id: string;
+  media_reference: string;
+  detection_type: "feu" | "arme" | "criminel";
+  location: string;
+  timestamp: string;
+  statut: "Traité" | "Non traité";
+};
+function isValidMediaReference(url?: string): boolean {
+  if (!url || typeof url !== "string") return false;
+
+  try {
+    // On accepte aussi les chemins relatifs ("/images/abc.jpg")
+    if (url.startsWith("/")) return true;
+
+    // Sinon, on teste si c'est une URL absolue valide
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export default function AlertesPage() {
+  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const pageSize = 5;
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [endDate, setEndDate] = useState<string | null>(null);
+  const [showDateFilter, setShowDateFilter] = useState<boolean>(false);
+  const [statutFilter, setStatutFilter] = useState("all");
+
+  useEffect(() => {
+    const fetchAlerts = async () => {
+      setLoading(true);
+
+      console.log(statutFilter); // Ajoutez cette ligne pour déboguer
+
+      const params = new URLSearchParams({
+        search,
+        type: typeFilter,
+        statut: statutFilter, // Ajout du statutFilter ici
+        skip: ((page - 1) * pageSize).toString(),
+        limit: pageSize.toString(),
+        ...(startDate ? { date_from: startDate } : {}),
+        ...(endDate ? { date_to: endDate } : {}),
+      });
+
+      const res = await fetch(
+        `http://localhost:8000/alerts/AllaLerts?${params}`
+      );
+      const json = await res.json();
+
+      setAlerts(json.data);
+      setTotal(json.total);
+      setLoading(false);
+    };
+
+    fetchAlerts();
+  }, [search, typeFilter, statutFilter, page, startDate, endDate]);
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Alertes</h2>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Ajouter une alerte
-        </Button>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4">
         <div className="grid flex-1 gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input type="search" placeholder="Rechercher des alertes..." className="pl-8" />
+            <Input
+              type="search"
+              placeholder="Rechercher des alertes..."
+              className="pl-8"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+            />
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <Select defaultValue="all">
+            <Select
+              value={typeFilter}
+              onValueChange={(val) => {
+                setTypeFilter(val);
+                setPage(1);
+              }}
+            >
               <SelectTrigger id="type">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent position="popper">
                 <SelectItem value="all">Tous types</SelectItem>
-                <SelectItem value="fire">Feu</SelectItem>
-                <SelectItem value="weapon">Arme</SelectItem>
-                <SelectItem value="face">Visage</SelectItem>
+                <SelectItem value="feu">Feu</SelectItem>
+                <SelectItem value="arme">Arme</SelectItem>
+                <SelectItem value="criminel">Criminel</SelectItem>
               </SelectContent>
             </Select>
-            <Select defaultValue="all">
-              <SelectTrigger id="camera">
-                <SelectValue placeholder="Caméra" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="all">Toutes caméras</SelectItem>
-                <SelectItem value="entrance">Entrée</SelectItem>
-                <SelectItem value="parking">Parking</SelectItem>
-                <SelectItem value="hall">Hall</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select defaultValue="all">
-              <SelectTrigger id="severity">
-                <SelectValue placeholder="Gravité" />
-              </SelectTrigger>
-              <SelectContent position="popper">
-                <SelectItem value="all">Toutes</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
-                <SelectItem value="critical">Critique</SelectItem>
-                <SelectItem value="moderate">Modéré</SelectItem>
-                <SelectItem value="low">Faible</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="icon">
-              <Filter className="h-4 w-4" />
-            </Button>
+            <div>
+              <Select
+                value={statutFilter}
+                onValueChange={(val) => {
+                  setStatutFilter(val);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger id="statut">
+                  <SelectValue placeholder="Statut" />
+                </SelectTrigger>
+                <SelectContent position="popper">
+                  <SelectItem value="all">Tous les statuts</SelectItem>
+                  <SelectItem value="Traité">Traité</SelectItem>
+                  <SelectItem value="Non traité">Non traité</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <Button variant="outline" className="sm:w-[150px]">
+
+          <Button
+            variant="outline"
+            className="sm:w-[150px]"
+            onClick={() => setShowDateFilter((prev) => !prev)}
+          >
             <Calendar className="mr-2 h-4 w-4" />
             Filtrer par date
           </Button>
+
+          {/* Affichage des champs de dates quand on clique sur le bouton */}
+          {showDateFilter && (
+            <div className="flex gap-2">
+              <Input
+                type="date"
+                value={startDate || ""}
+                onChange={(e) => setStartDate(e.target.value)}
+                placeholder="Date de début"
+              />
+              <Input
+                type="date"
+                value={endDate || ""}
+                onChange={(e) => setEndDate(e.target.value)}
+                placeholder="Date de fin"
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -74,147 +190,120 @@ export default function AlertesPage() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>Alert_id</TableHead>
               <TableHead className="w-[100px]">Image</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead>Caméra</TableHead>
+              <TableHead>Location</TableHead>
               <TableHead>Date & Heure</TableHead>
-              <TableHead>Gravité</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow>
-              <TableCell>
-                <div className="w-[80px] h-[45px] relative rounded overflow-hidden">
-                  <Image
-                    src="/placeholder.svg?height=45&width=80&text=Feu"
-                    alt="Incident"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Fire className="h-4 w-4 text-rose-500" />
-                  <span>Détection de feu</span>
-                </div>
-              </TableCell>
-              <TableCell>Entrée Principale</TableCell>
-              <TableCell>05/07/2023 - 14:23</TableCell>
-              <TableCell>
-                <Badge className="bg-rose-500">Urgent</Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline" className="border-amber-500 text-amber-500">
-                  En cours
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="icon">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  </Button>
-                  <Button variant="ghost" size="icon">
-                    <X className="h-4 w-4 text-red-500" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={7}>Chargement...</TableCell>
+              </TableRow>
+            ) : (alerts?.length ?? 0) === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7}>Aucune alerte trouvée.</TableCell>
+              </TableRow>
+            ) : (
+              alerts.map((alert) => (
+                <TableRow key={alert.alert_id}>
+                  <TableCell>{alert.alert_id}</TableCell>
+                  <TableCell>
+                    <div className="w-[80px] h-[45px] relative rounded overflow-hidden">
+                      <Image
+                        src={
+                          isValidMediaReference(alert.media_reference)
+                            ? alert.media_reference!
+                            : "/placeholder.svg"
+                        }
+                        alt="Incident"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      {alert.detection_type === "feu" && (
+                        <Fire className="h-4 w-4 text-rose-500" />
+                      )}
+                      {alert.detection_type === "arme" && (
+                        <Gun className="h-4 w-4 text-amber-500" />
+                      )}
+                      {alert.detection_type === "criminel" && (
+                        <User className="h-4 w-4 text-violet-500" />
+                      )}
 
-            <TableRow>
-              <TableCell>
-                <div className="w-[80px] h-[45px] relative rounded overflow-hidden">
-                  <Image
-                    src="/placeholder.svg?height=45&width=80&text=Arme"
-                    alt="Incident"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Gun className="h-4 w-4 text-amber-500" />
-                  <span>Détection d'arme</span>
-                </div>
-              </TableCell>
-              <TableCell>Parking Sud</TableCell>
-              <TableCell>05/07/2023 - 13:45</TableCell>
-              <TableCell>
-                <Badge className="bg-amber-500">Critique</Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline" className="border-amber-500 text-amber-500">
-                  En cours
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="icon">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  </Button>
-                  <Button variant="ghost" size="icon">
-                    <X className="h-4 w-4 text-red-500" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-
-            <TableRow>
-              <TableCell>
-                <div className="w-[80px] h-[45px] relative rounded overflow-hidden">
-                  <Image
-                    src="/placeholder.svg?height=45&width=80&text=Visage"
-                    alt="Incident"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-violet-500" />
-                  <span>Visage sensible détecté</span>
-                </div>
-              </TableCell>
-              <TableCell>Hall d'Accueil</TableCell>
-              <TableCell>05/07/2023 - 13:12</TableCell>
-              <TableCell>
-                <Badge className="bg-violet-500">Modéré</Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline" className="border-green-500 text-green-500">
-                  Traité
-                </Badge>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button variant="ghost" size="icon">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  </Button>
-                  <Button variant="ghost" size="icon">
-                    <X className="h-4 w-4 text-red-500" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
+                      <span>
+                        {alert.detection_type === "feu"
+                          ? "Détection de feu"
+                          : alert.detection_type === "arme"
+                            ? "Détection d'arme"
+                            : "Visage sensible détecté"}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{alert.location}</TableCell>
+                  <TableCell>
+                    {new Date(alert.timestamp).toLocaleString("fr-FR")}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={
+                        alert.statut === "Traité"
+                          ? "border-green-500 text-green-500"
+                          : "border-amber-500 text-amber-500"
+                      }
+                    >
+                      {alert.statut}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="icon">
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      </Button>
+                      <Button variant="ghost" size="icon">
+                        <X className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
 
       <div className="flex items-center justify-between">
-        <div className="text-sm text-muted-foreground">Affichage de 3 alertes sur 24 au total</div>
+        <div className="text-sm text-muted-foreground">
+          Affichage de {alerts?.length ?? 0} alertes sur {total ?? 0} au total
+        </div>
+
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" disabled>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage(page - 1)}
+          >
             Précédent
           </Button>
-          <Button variant="outline" size="sm">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page * pageSize >= total}
+            onClick={() => setPage(page + 1)}
+          >
             Suivant
           </Button>
         </div>
       </div>
     </div>
-  )
+  );
 }

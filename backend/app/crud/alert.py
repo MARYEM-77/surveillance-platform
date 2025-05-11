@@ -4,6 +4,7 @@ from app.schemas.alert import AlertCreate
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from datetime import date
+from typing import Optional
 
 from collections import Counter
 
@@ -323,3 +324,57 @@ def get_alerts_by_day_of_month(db: Session):
         })
 
     return formatted_data
+
+
+
+#Partie MAryem (2eme page )
+def get_ALLalerts(
+    db: Session,
+    search: Optional[str] = None,
+    type: Optional[str] = None,
+    statut: Optional[str] = None,
+    date_from: Optional[datetime] = None,
+    date_to: Optional[datetime] = None,
+    skip: int = 0,
+    limit: int = 10,
+):
+    query = db.query(AlertModel)
+
+    if search:
+        # Filtrer aussi sur alert_id si la recherche est un nombre
+        if search.isdigit():  # Si search est un ID d'alerte
+            query = query.filter(AlertModel.alert_id == search)
+        else:  # Sinon, on continue à filtrer sur la localisation
+            query = query.filter(AlertModel.location.ilike(f"%{search}%"))
+    """
+    if search:
+    # !!!!!!!Recherche sur alert_id (si search est numérique, on le cherche sur alert_id, sinon sur location)
+    if search.isdigit():
+        query = query.filter(AlertModel.alert_id.ilike(f"%{search}%"))
+    else:
+        query = query.filter(AlertModel.location.ilike(f"%{search}%"))
+
+    
+    """
+
+
+    if type and type != "all":
+        query = query.filter(AlertModel.detection_type == type)
+
+    if statut and statut != "all":
+       query = query.filter(AlertModel.statut.ilike(statut))
+
+
+
+
+    if date_from:
+       query = query.filter(AlertModel.timestamp >= datetime.combine(date_from, datetime.min.time()))
+
+    if date_to:
+       query = query.filter(AlertModel.timestamp <= datetime.combine(date_to, datetime.max.time()))
+
+
+    total = query.count()
+    results = query.order_by(AlertModel.timestamp.desc()).offset(skip).limit(limit).all()
+
+    return results, total
