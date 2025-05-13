@@ -341,9 +341,18 @@ export default function AlertesPage() {
                           }`}
                         />
                       </Button>
-                      <Button variant="ghost" size="sm">
-                        <Download className="mr-1 h-4 w-4" />
-                      </Button>
+                      <Button
+  variant="ghost"
+  size="icon"
+  onClick={() => {
+    const downloadUrl = `http://localhost:8000/alerts/${alert.alert_id}/pdf`;
+    window.open(downloadUrl, "_blank");
+  }}
+  title="Télécharger le rapport PDF"
+>
+  <Download className="h-4 w-4" />
+</Button>
+
                     </div>
                   </TableCell>
                 </TableRow>

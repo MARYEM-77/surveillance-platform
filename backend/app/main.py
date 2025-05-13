@@ -154,6 +154,7 @@ def read_alerts(
         db=db,
         search=search,
         type=type,
+        statut=statut,
         date_from=date_from,
         date_to=date_to,
         skip=skip,
@@ -176,3 +177,17 @@ def read_alerts(
         "skip": skip,
         "limit": limit,
     }
+    
+    
+    
+    
+#route pour télécharger rapport
+from fastapi.responses import FileResponse
+from app.utils.generate_alert_report import generate_report_by_id
+
+@app.get("/alerts/{alert_id}/pdf")
+def download_alert_report(alert_id: str):
+    path = generate_report_by_id(alert_id)
+    if not path:
+        raise HTTPException(status_code=404, detail="Rapport introuvable")
+    return FileResponse(path, filename=f"rapport_{alert_id}.pdf", media_type="application/pdf")

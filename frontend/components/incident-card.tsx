@@ -73,9 +73,17 @@ export function IncidentCard({
         </div>
       </CardContent>
       <CardFooter className="p-4 pt-0 flex justify-between gap-2">
-        <Button variant="outline" size="sm">
-          <Download className="mr-1 h-4 w-4" /> PDF
-        </Button>
+        <Button
+  variant="ghost"
+  size="sm"
+  onClick={() => {
+    const downloadUrl = `http://localhost:8000/alerts/${props.alertId}/pdf`;
+    window.open(downloadUrl, "_blank");
+  }}
+><Download className="h-4 w-4" />
+   PDF
+</Button>
+
         <Button
           size="sm"
           onClick={props.onTreat} // ← ici

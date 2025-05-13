@@ -137,7 +137,7 @@ export function AlertDialogPopup({ alert, onClose, onTreatConfirm }: Props) {
             }}
           >
             <PhoneCall className="h-4 w-4 mr-2" />
-            Fermer
+            Valider
           </Button>
         </DialogFooter>
       </DialogContent>
