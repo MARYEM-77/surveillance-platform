@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, Bell, Calendar, Camera, FileText, Home, Settings } from "lucide-react"
+import { BarChart3, Bell, Home, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const routes = [
@@ -17,24 +17,6 @@ const routes = [
     icon: Bell,
     href: "/alertes",
     color: "text-rose-500",
-  },
-  {
-    label: "Événements",
-    icon: Calendar,
-    href: "/evenements",
-    color: "text-violet-500",
-  },
-  {
-    label: "Rapports",
-    icon: FileText,
-    href: "/rapports",
-    color: "text-emerald-500",
-  },
-  {
-    label: "Caméras / Zones",
-    icon: Camera,
-    href: "/cameras",
-    color: "text-amber-500",
   },
   {
     label: "Paramètres",
