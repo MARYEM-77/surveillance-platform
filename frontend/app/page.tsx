@@ -184,11 +184,6 @@ useEffect(() => {
 }, []);
 
 
-const getSeverity = (type: string): "urgent" | "critical" | "moderate" => {
-  if (type === "feu") return "urgent";
-  if (type === "arme") return "critical";
-  return "moderate";
-};
 
 
 
@@ -738,7 +733,6 @@ const getSeverity = (type: string): "urgent" | "critical" | "moderate" => {
             }
             location={alert.location}
             time={getRelativeTime(alert.timestamp)}
-            severity={getSeverity(alert.detection_type)}
             image={`http://localhost:8000/${alert.media_reference}`}
             alertId={alert.alert_id}
             onTreat={() => setSelectedAlert(alert)}
