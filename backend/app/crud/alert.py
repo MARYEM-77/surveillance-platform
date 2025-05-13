@@ -341,22 +341,7 @@ def get_ALLalerts(
     query = db.query(AlertModel)
 
     if search:
-        # Filtrer aussi sur alert_id si la recherche est un nombre
-        if search.isdigit():  # Si search est un ID d'alerte
-            query = query.filter(AlertModel.alert_id == search)
-        else:  # Sinon, on continue à filtrer sur la localisation
-            query = query.filter(AlertModel.location.ilike(f"%{search}%"))
-    """
-    if search:
-    # !!!!!!!Recherche sur alert_id (si search est numérique, on le cherche sur alert_id, sinon sur location)
-    if search.isdigit():
         query = query.filter(AlertModel.alert_id.ilike(f"%{search}%"))
-    else:
-        query = query.filter(AlertModel.location.ilike(f"%{search}%"))
-
-    
-    """
-
 
     if type and type != "all":
         query = query.filter(AlertModel.detection_type == type)

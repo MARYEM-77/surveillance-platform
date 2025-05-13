@@ -1,6 +1,11 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
+const MySwal = withReactContent(Swal);
+
 import {
   Select,
   SelectContent,
@@ -29,6 +34,8 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Download } from "lucide-react";
+
 import Image from "next/image";
 
 type Alert = {
@@ -39,6 +46,7 @@ type Alert = {
   timestamp: string;
   statut: "Traité" | "Non traité";
 };
+
 function isValidMediaReference(url?: string): boolean {
   if (!url || typeof url !== "string") return false;
 
@@ -67,34 +75,85 @@ export default function AlertesPage() {
   const [showDateFilter, setShowDateFilter] = useState<boolean>(false);
   const [statutFilter, setStatutFilter] = useState("all");
 
-  useEffect(() => {
-    const fetchAlerts = async () => {
-      setLoading(true);
+  const fetchAlerts = async () => {
+    setLoading(true);
+    const params = new URLSearchParams({
+      search,
+      type: typeFilter,
+      statut: statutFilter,
+      skip: ((page - 1) * pageSize).toString(),
+      limit: pageSize.toString(),
+      ...(startDate ? { date_from: startDate } : {}),
+      ...(endDate ? { date_to: endDate } : {}),
+    });
 
-      console.log(statutFilter); // Ajoutez cette ligne pour déboguer
-
-      const params = new URLSearchParams({
-        search,
-        type: typeFilter,
-        statut: statutFilter, // Ajout du statutFilter ici
-        skip: ((page - 1) * pageSize).toString(),
-        limit: pageSize.toString(),
-        ...(startDate ? { date_from: startDate } : {}),
-        ...(endDate ? { date_to: endDate } : {}),
-      });
-
+    try {
       const res = await fetch(
         `http://localhost:8000/alerts/AllaLerts?${params}`
       );
       const json = await res.json();
-
       setAlerts(json.data);
       setTotal(json.total);
+    } catch (error) {
+      console.error("Erreur lors du chargement des alertes :", error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchAlerts();
   }, [search, typeFilter, statutFilter, page, startDate, endDate]);
+
+  const handleTreatAlert = async (alert: Alert) => {
+    const result = await MySwal.fire({
+      title: "Confirmation",
+      text: "Voulez-vous vraiment traiter cette alerte ?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Oui, traiter",
+      cancelButtonText: "Annuler",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/alerts/${alert.alert_id}/`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ statut: "Traité" }),
+        }
+      );
+
+      if (response.ok) {
+        await fetchAlerts();
+        MySwal.fire({
+          title: "Succès",
+          text: "L'alerte a été traitée avec succès.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } else {
+        MySwal.fire({
+          title: "Erreur",
+          text: "Échec de la mise à jour du statut de l'alerte.",
+          icon: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Erreur lors de la requête PATCH :", error);
+      MySwal.fire({
+        title: "Erreur",
+        text: "Une erreur est survenue lors de la requête.",
+        icon: "error",
+      });
+    }
+  };
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -265,11 +324,25 @@ export default function AlertesPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon">
-                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          // Appelle une fonction de traitement ici
+                          handleTreatAlert(alert);
+                        }}
+                        disabled={alert.statut === "Traité"} // désactive si déjà traité
+                      >
+                        <CheckCircle
+                          className={`h-4 w-4 ${
+                            alert.statut === "Traité"
+                              ? "text-gray-400"
+                              : "text-green-500"
+                          }`}
+                        />
                       </Button>
-                      <Button variant="ghost" size="icon">
-                        <X className="h-4 w-4 text-red-500" />
+                      <Button variant="ghost" size="sm">
+                        <Download className="mr-1 h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
