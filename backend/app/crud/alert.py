@@ -18,11 +18,35 @@ def create_alert(db: Session, alert: AlertCreate):
 def get_alerts(db: Session, skip: int = 0, limit: int = 10):
     return db.query(AlertModel).offset(skip).limit(limit).all()
 
-#code pour partie jihane
+#code pour partie jihane corrige par yassmine
 
 #compter le nbr d'alertes selon le type 
-def count_alerts_by_type(db: Session):
-    results = db.query(AlertModel.detection_type, func.count(AlertModel.alert_id)).group_by(AlertModel.detection_type).all()
+def count_alerts_by_type(db: Session, interval: str = None):
+    query = db.query(AlertModel)
+
+    if interval:
+        today = datetime.now().date()
+        if interval == "jour":
+            start = today
+            end = today + timedelta(days=1)
+        elif interval == "semaine":
+            start = today - timedelta(days=today.weekday())
+            end = start + timedelta(days=7)
+        elif interval == "mois":
+            start = today.replace(day=1)
+            if start.month == 12:
+                end = start.replace(year=start.year + 1, month=1)
+            else:
+                end = start.replace(month=start.month + 1)
+        else:
+            raise ValueError("Interval non supporté")
+
+        query = query.filter(AlertModel.timestamp >= start, AlertModel.timestamp < end)
+
+    results = query.with_entities(
+        AlertModel.detection_type, func.count(AlertModel.alert_id)
+    ).group_by(AlertModel.detection_type).all()
+
     stats = {type_: count for type_, count in results}
     stats["total"] = sum(stats.values())
     return stats

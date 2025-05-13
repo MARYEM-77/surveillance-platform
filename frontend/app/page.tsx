@@ -134,19 +134,17 @@ const [alerts, setAlerts] = useState<AlertType[]>([]);
 
 
 
-  useEffect(() => {
-    fetch("http://localhost:8000/alerts/stats/")
-      .then((res) => res.json())
-      .then((data) => setStats(data))
-      .catch((err) => console.error("Erreur API :", err));
-  }, []);
-
-  useEffect(() => {
-    fetch(`http://localhost:8000/alerts/delta/?interval=${selectedTab}`)
-      .then((res) => res.json())
-      .then((data) => setDeltas(data))
-      .catch((err) => console.error("Erreur delta :", err));
-  }, [selectedTab]);
+ // 📊 Récupération stats incident (types et deltas)
+useEffect(() => {
+  fetch(`http://localhost:8000/alerts/stats/?interval=${selectedTab}`)
+    .then((res) => res.json())
+    .then((data) => {
+      setStats(data); // le backend retourne déjà un objet plat avec les stats
+    })
+    .catch((err) =>
+      console.error("Erreur lors de la récupération des statistiques :", err)
+    );
+}, [selectedTab]);
 
   useEffect(() => {
     // Appels parallèles aux trois routes
@@ -212,66 +210,55 @@ useEffect(() => {
 
         <TabsContent value="jour" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Incidents
-                </CardTitle>
-
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.total || 0}</div>
-                {/* <p className="text-xs text-muted-foreground">+5 depuis hier</p> */}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Détection Feu
-                </CardTitle>
-                <Fire className="h-4 w-4 text-rose-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.feu || 0}</div>
-
-                <p className="text-xs text-muted-foreground">
-                  {deltas.feu >= 0 ? "+" : ""}
-                  {deltas.feu ?? 0} depuis hier
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Détection Armes
-                </CardTitle>
-                <Gun className="h-4 w-4 text-amber-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.arme || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  {deltas.arme >= 0 ? "+" : ""}
-                  {deltas.arme ?? 0} depuis hier
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Visages Sensibles
-                </CardTitle>
-                <User className="h-4 w-4 text-violet-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.criminel || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  {deltas.criminel >= 0 ? "+" : ""}
-                  {deltas.criminel ?? 0} depuis hier
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Incidents</CardTitle>
+          <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.total || 0}</div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Détection Feu</CardTitle>
+          <Fire className="h-4 w-4 text-rose-500" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.feu || 0}</div>
+          <p className="text-xs text-muted-foreground">
+            {deltas.feu >= 0 ? "+" : ""}
+            {deltas.feu ?? 0} depuis hier
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Détection Armes</CardTitle>
+          <Gun className="h-4 w-4 text-amber-500" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.arme || 0}</div>
+          <p className="text-xs text-muted-foreground">
+            {deltas.arme >= 0 ? "+" : ""}
+            {deltas.arme ?? 0} depuis hier
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Visages Sensibles</CardTitle>
+          <User className="h-4 w-4 text-violet-500" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.criminel || 0}</div>
+          <p className="text-xs text-muted-foreground">
+            {deltas.criminel >= 0 ? "+" : ""}
+            {deltas.criminel ?? 0} depuis hier
+          </p>
+        </CardContent>
+      </Card>
+    </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">

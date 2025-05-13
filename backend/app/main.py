@@ -52,11 +52,12 @@ def add_alert(alert: AlertCreate, db: Session = Depends(get_db)):
 def read_alerts(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     return get_alerts(db, skip=skip, limit=limit)
 
-#^partie jihane 
+#^partie jihane corrige par yassmine
 
 @app.get("/alerts/stats/")
-def get_alert_stats(db: Session = Depends(get_db)):
-    return count_alerts_by_type(db)
+def get_alert_stats(interval: str = Query(None), db: Session = Depends(get_db)):
+    return count_alerts_by_type(db, interval)
+
 
 @app.get("/alerts/delta/")
 def get_alerts_delta(interval: str = Query("jour"), db: Session = Depends(get_db)):
