@@ -1,132 +1,150 @@
+'use client'
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
 import { FormDescription, FormLabel } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Save, Server, Shield, User, Users } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Save, User, Users, Server, Shield } from "lucide-react"
+import { useForm, FormProvider } from "react-hook-form"
 
 export default function ParametresPage() {
+  const form = useForm() // Initialisation du formulaire
+
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Paramètres</h2>
-        <Button>
-          <Save className="mr-2 h-4 w-4" /> Enregistrer les modifications
-        </Button>
-      </div>
+    <FormProvider {...form}>
+      <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-3xl font-bold tracking-tight">Paramètres</h2>
+          <Button variant="default">
+            <Save className="mr-2 h-4 w-4" />
+            Enregistrer les modifications
+          </Button>
+        </div>
 
-      <Tabs defaultValue="general" className="space-y-4">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 lg:w-[600px]">
-          <TabsTrigger value="general">Général</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="securite">Sécurité</TabsTrigger>
-          <TabsTrigger value="utilisateurs">Utilisateurs</TabsTrigger>
-          <TabsTrigger value="systeme">Système</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="general" className="space-y-4">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:w-[600px]">
+            <TabsTrigger value="general">Général</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="securite">Sécurité</TabsTrigger>
+            <TabsTrigger value="utilisateurs">Utilisateurs</TabsTrigger>
+            <TabsTrigger value="systeme">Système</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="general" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Paramètres Généraux</CardTitle>
-              <CardDescription>Configurez les paramètres généraux de la plateforme de surveillance.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <FormLabel>Nom de l'installation</FormLabel>
-                  <Input defaultValue="Bâtiment Principal" />
-                  <FormDescription>Le nom qui sera affiché dans les rapports et notifications.</FormDescription>
-                </div>
-                <div className="grid gap-2">
-                  <FormLabel>Fuseau horaire</FormLabel>
-                  <Select defaultValue="europe-paris">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un fuseau horaire" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="europe-paris">Europe/Paris (UTC+1)</SelectItem>
-                      <SelectItem value="europe-london">Europe/London (UTC+0)</SelectItem>
-                      <SelectItem value="america-new_york">America/New_York (UTC-5)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <FormLabel>Langue</FormLabel>
-                  <Select defaultValue="fr">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner une langue" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <FormLabel>Mode sombre</FormLabel>
-                    <FormDescription>Activer le thème sombre pour l'interface.</FormDescription>
+          {/* Onglet Général */}
+          <TabsContent value="general" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Paramètres Généraux</CardTitle>
+                <CardDescription>
+                  Configurez les paramètres généraux de la plateforme.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-4">
+                  <div className="grid gap-2">
+                    <FormLabel htmlFor="site-name">Nom de l'installation</FormLabel>
+                    <Input id="site-name" defaultValue="Bâtiment Principal" />
+                    <FormDescription>Le nom apparaîtra dans les rapports et alertes.</FormDescription>
                   </div>
-                  <Switch />
+                  <div className="grid gap-2">
+                    <FormLabel>Fuseau horaire</FormLabel>
+                    <Select defaultValue="europe-paris">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner un fuseau horaire" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="europe-paris">Europe/Paris (UTC+1)</SelectItem>
+                        <SelectItem value="europe-london">Europe/London (UTC+0)</SelectItem>
+                        <SelectItem value="america-new_york">America/New_York (UTC-5)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <FormLabel>Langue</FormLabel>
+                    <Select defaultValue="fr">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une langue" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fr">Français</SelectItem>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Español</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <FormLabel>Mode sombre</FormLabel>
+                      <FormDescription>Activer l'interface en thème sombre.</FormDescription>
+                    </div>
+                    <Switch />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
+              </CardContent>
+            </Card>
+          </TabsContent>
+          {/* Onglet Notifications */}
         <TabsContent value="notifications" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Paramètres de Notifications</CardTitle>
-              <CardDescription>Configurez comment et quand vous recevez des notifications.</CardDescription>
+              <CardTitle>Notifications</CardTitle>
+              <CardDescription>Personnalisez vos alertes.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <FormLabel>Notifications par email</FormLabel>
-                    <FormDescription>Recevoir des alertes par email.</FormDescription>
+              {[
+                { label: "Email", desc: "Recevoir des alertes par email." },
+                { label: "SMS", desc: "Recevoir des alertes par SMS." },
+                { label: "Push", desc: "Alertes via l'application mobile." },
+              ].map(({ label, desc }) => (
+                <div key={label} className="flex items-center justify-between">
+                  <div>
+                    <FormLabel>Notifications {label}</FormLabel>
+                    <FormDescription>{desc}</FormDescription>
                   </div>
                   <Switch defaultChecked />
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <FormLabel>Notifications SMS</FormLabel>
-                    <FormDescription>Recevoir des alertes par SMS.</FormDescription>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <FormLabel>Notifications push</FormLabel>
-                    <FormDescription>Recevoir des alertes sur l'application mobile.</FormDescription>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-                <div className="grid gap-2">
-                  <FormLabel>Niveau de gravité minimum</FormLabel>
-                  <Select defaultValue="all">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un niveau" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les niveaux</SelectItem>
-                      <SelectItem value="urgent">Urgent uniquement</SelectItem>
-                      <SelectItem value="critical">Critique et plus</SelectItem>
-                      <SelectItem value="moderate">Modéré et plus</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              ))}
+              <div className="grid gap-2">
+                <FormLabel>Niveau de gravité minimum</FormLabel>
+                <Select defaultValue="all">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sélectionner un niveau" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les niveaux</SelectItem>
+                    <SelectItem value="urgent">Urgent uniquement</SelectItem>
+                    <SelectItem value="critical">Critique et plus</SelectItem>
+                    <SelectItem value="moderate">Modéré et plus</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="securite" className="space-y-4">
+          {/* Onglet Sécurité */}
+          <TabsContent value="securite" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Paramètres de Sécurité</CardTitle>
@@ -172,7 +190,8 @@ export default function ParametresPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="utilisateurs" className="space-y-4">
+          {/* Onglet Utilisateurs */}
+          <TabsContent value="utilisateurs" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Gestion des Utilisateurs</CardTitle>
@@ -230,7 +249,7 @@ export default function ParametresPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="systeme" className="space-y-4">
+          <TabsContent value="systeme" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Paramètres Système</CardTitle>
@@ -289,7 +308,8 @@ export default function ParametresPage() {
             </CardFooter>
           </Card>
         </TabsContent>
-      </Tabs>
-    </div>
+        </Tabs>
+      </div>
+    </FormProvider>
   )
 }
