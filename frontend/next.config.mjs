@@ -8,6 +8,7 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    domains: ['localhost'], // 🔥 AJOUT ICI POUR ACCEPTER LES IMAGES DEPUIS LE BACKEND
   },
 }
 

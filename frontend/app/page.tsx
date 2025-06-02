@@ -25,7 +25,6 @@ import { DashboardChartWeek } from "@/components/dashboard-chart-week";
 import { IncidentCard } from "@/components/incident-card";
 import { useEffect, useState } from "react";
 
-
 import { AlertDialogPopup } from "@/components/AlertDialogPopup";
 
 export default function Dashboard() {
@@ -41,110 +40,108 @@ export default function Dashboard() {
     percentageUntreated: 0,
   });
 
-const [selectedAlert, setSelectedAlert] = useState<AlertType | null>(null);
-const [showAll, setShowAll] = useState(false);
+  const [selectedAlert, setSelectedAlert] = useState<AlertType | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
+  //fct pour reload automatiquement la page :
 
-//fct pour reload automatiquement la page : 
-
-const reloadStatusData = () => {
-  Promise.all([
-    fetch(`http://localhost:8000/alerts/interval-stats/?interval=${selectedTab}`).then((res) => res.json()),
-    fetch(`http://localhost:8000/alerts/pourcentages/?interval=${selectedTab}`).then((res) => res.json()),
-    fetch(`http://localhost:8000/alerts/status-delta/?interval=${selectedTab}`).then((res) => res.json()),
-  ])
-    .then(([status, percentages, deltas]) => {
-      setStatusData({
-        treated: status["traite"],
-        untreated: status["non_traite"],
-        deltaTreated: deltas["Traité"],
-        deltaUntreated: deltas["Non traité"],
-        percentageTreated: percentages["traite"],
-        percentageUntreated: percentages["non_traite"],
+  const reloadStatusData = () => {
+    Promise.all([
+      fetch(
+        `http://localhost:8000/alerts/interval-stats/?interval=${selectedTab}`
+      ).then((res) => res.json()),
+      fetch(
+        `http://localhost:8000/alerts/pourcentages/?interval=${selectedTab}`
+      ).then((res) => res.json()),
+      fetch(
+        `http://localhost:8000/alerts/status-delta/?interval=${selectedTab}`
+      ).then((res) => res.json()),
+    ])
+      .then(([status, percentages, deltas]) => {
+        setStatusData({
+          treated: status["traite"],
+          untreated: status["non_traite"],
+          deltaTreated: deltas["Traité"],
+          deltaUntreated: deltas["Non traité"],
+          percentageTreated: percentages["traite"],
+          percentageUntreated: percentages["non_traite"],
+        });
+      })
+      .catch((error) => {
+        console.error("Erreur lors du rechargement des données :", error);
       });
-    })
-    .catch((error) => {
-      console.error("Erreur lors du rechargement des données :", error);
-    });
-};
+  };
 
+  //code jihane ajouté
 
+  const getRelativeTime = (timestamp: string) => {
+    const diffMs = Date.now() - new Date(timestamp).getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHours = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHours / 24);
 
-//code jihane ajouté 
+    if (diffDays > 0)
+      return `Il y a ${diffDays} jour${diffDays > 1 ? "s" : ""}`;
+    if (diffHours > 0)
+      return `Il y a ${diffHours} heure${diffHours > 1 ? "s" : ""}`;
+    if (diffMin > 0) return `Il y a ${diffMin} min`;
 
+    return "À l'instant";
+  };
 
-const getRelativeTime = (timestamp: string) => {
-  const diffMs = Date.now() - new Date(timestamp).getTime();
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHours = Math.floor(diffMin / 60);
-  const diffDays = Math.floor(diffHours / 24);
+  //code ajouté par jihane pour le traitement des alertes non traitées :
 
-  if (diffDays > 0) return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
-if (diffHours > 0) return `Il y a ${diffHours} heure${diffHours > 1 ? 's' : ''}`;
-if (diffMin > 0) return `Il y a ${diffMin} min`;
+  const handleTreatAlert = async (alert: AlertType) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8000/alerts/${alert.alert_id}/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ statut: "Traité" }),
+        }
+      );
 
-  return "À l'instant";
-};
-
-//code ajouté par jihane pour le traitement des alertes non traitées : 
-
-
-const handleTreatAlert = async (alert: AlertType) => {
-  try {
-    const response = await fetch(`http://localhost:8000/alerts/${alert.alert_id}/`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ statut: "Traité" }),
-    });
-
-    if (response.ok) {
-      setAlerts((prev) => prev.filter((a) => a.alert_id !== alert.alert_id));
-      setSelectedAlert(null);
-      reloadStatusData();
-    } else {
-      console.error("Échec de la mise à jour du statut de l'alerte");
+      if (response.ok) {
+        setAlerts((prev) => prev.filter((a) => a.alert_id !== alert.alert_id));
+        setSelectedAlert(null);
+        reloadStatusData();
+      } else {
+        console.error("Échec de la mise à jour du statut de l'alerte");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la requête PATCH :", error);
     }
-  } catch (error) {
-    console.error("Erreur lors de la requête PATCH :", error);
-  }
-};
+  };
 
-
-//
-
-
-
+  //
 
   type AlertType = {
-  alert_id: string;
-  detection_type: string;
-  location: string;
-  timestamp: string;
-  media_reference: string;
-};
+    alert_id: string;
+    detection_type: string;
+    location: string;
+    timestamp: string;
+    media_reference: string;
+  };
 
-const [alerts, setAlerts] = useState<AlertType[]>([]);
+  const [alerts, setAlerts] = useState<AlertType[]>([]);
 
+  //
 
-//
-
-
-
-
- // 📊 Récupération stats incident (types et deltas)
-useEffect(() => {
-  fetch(`http://localhost:8000/alerts/stats/?interval=${selectedTab}`)
-    .then((res) => res.json())
-    .then((data) => {
-      setStats(data); // le backend retourne déjà un objet plat avec les stats
-    })
-    .catch((err) =>
-      console.error("Erreur lors de la récupération des statistiques :", err)
-    );
-}, [selectedTab]);
+  // 📊 Récupération stats incident (types et deltas)
+  useEffect(() => {
+    fetch(`http://localhost:8000/alerts/stats/?interval=${selectedTab}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setStats(data); // le backend retourne déjà un objet plat avec les stats
+      })
+      .catch((err) =>
+        console.error("Erreur lors de la récupération des statistiques :", err)
+      );
+  }, [selectedTab]);
 
   useEffect(() => {
     // Appels parallèles aux trois routes
@@ -174,24 +171,18 @@ useEffect(() => {
       });
   }, [selectedTab]);
 
-useEffect(() => {
-  fetch("http://localhost:8000/alerts/unresolved")
-    .then((res) => res.json())
-    .then((data) => setAlerts(data))
-    .catch((err) => console.error("Erreur chargement alertes :", err));
-}, []);
-
-
-
-
+  useEffect(() => {
+    fetch("http://localhost:8000/alerts/unresolved")
+      .then((res) => res.json())
+      .then((data) => setAlerts(data))
+      .catch((err) => console.error("Erreur chargement alertes :", err));
+  }, []);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Tableau de Bord</h2>
-        <div className="flex items-center gap-2">
-          
-        </div>
+        <div className="flex items-center gap-2"></div>
       </div>
 
       {/* <Tabs defaultValue="jour" className="space-y-4"> */}
@@ -210,55 +201,63 @@ useEffect(() => {
 
         <TabsContent value="jour" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Incidents</CardTitle>
-          <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.total || 0}</div>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Détection Feu</CardTitle>
-          <Fire className="h-4 w-4 text-rose-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.feu || 0}</div>
-          <p className="text-xs text-muted-foreground">
-            {deltas.feu >= 0 ? "+" : ""}
-            {deltas.feu ?? 0} depuis hier
-          </p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Détection Armes</CardTitle>
-          <Gun className="h-4 w-4 text-amber-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.arme || 0}</div>
-          <p className="text-xs text-muted-foreground">
-            {deltas.arme >= 0 ? "+" : ""}
-            {deltas.arme ?? 0} depuis hier
-          </p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Visages Sensibles</CardTitle>
-          <User className="h-4 w-4 text-violet-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{stats.criminel || 0}</div>
-          <p className="text-xs text-muted-foreground">
-            {deltas.criminel >= 0 ? "+" : ""}
-            {deltas.criminel ?? 0} depuis hier
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Incidents
+                </CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.total || 0}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Détection Feu
+                </CardTitle>
+                <Fire className="h-4 w-4 text-rose-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.feu || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  {deltas.feu >= 0 ? "+" : ""}
+                  {deltas.feu ?? 0} depuis hier
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Détection Armes
+                </CardTitle>
+                <Gun className="h-4 w-4 text-amber-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.arme || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  {deltas.arme >= 0 ? "+" : ""}
+                  {deltas.arme ?? 0} depuis hier
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Visages Sensibles
+                </CardTitle>
+                <User className="h-4 w-4 text-violet-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.criminel || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  {deltas.criminel >= 0 ? "+" : ""}
+                  {deltas.criminel ?? 0} depuis hier
+                </p>
+              </CardContent>
+            </Card>
+          </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
@@ -516,7 +515,7 @@ useEffect(() => {
                       <div
                         className="h-full bg-green-500"
                         style={{
-                          width: `${statusData.percentageUntreated|| 0}%`,
+                          width: `${statusData.percentageUntreated || 0}%`,
                         }}
                       />
                     </div>
@@ -699,7 +698,7 @@ useEffect(() => {
         </TabsContent>
       </Tabs>
 
-     <h3 className="text-xl font-semibold mt-6 mb-4">Incidents en Direct</h3>
+      <h3 className="text-xl font-semibold mt-6 mb-4">Incidents en Direct</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {(showAll ? alerts : alerts.slice(0, 3)).map((alert) => (
           <IncidentCard
@@ -708,19 +707,20 @@ useEffect(() => {
               alert.detection_type === "feu"
                 ? "fire"
                 : alert.detection_type === "arme"
-                ? "weapon"
-                : "face"
+                  ? "weapon"
+                  : "face"
             }
             title={
               alert.detection_type === "feu"
                 ? "Détection de feu"
                 : alert.detection_type === "arme"
-                ? "Détection d'arme"
-                : "Visage sensible détecté"
+                  ? "Détection d'arme"
+                  : "Visage sensible détecté"
             }
             location={alert.location}
             time={getRelativeTime(alert.timestamp)}
-            image={`http://localhost:8000/${alert.media_reference}`}
+            image={`http://localhost:8000/external-media/${alert.media_reference.split('\\').pop()}`}
+
             alertId={alert.alert_id}
             onTreat={() => setSelectedAlert(alert)}
           />
@@ -728,17 +728,21 @@ useEffect(() => {
       </div>
 
       <div className="mt-6">
-        <Button variant="outline" className="w-full" onClick={() => setShowAll(!showAll)}>
-          {showAll ? "Afficher moins" : "Voir tous les incidents"} <ArrowRight className="ml-2 h-4 w-4" />
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll ? "Afficher moins" : "Voir tous les incidents"}{" "}
+          <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
 
       <AlertDialogPopup
-  alert={selectedAlert}
-  onClose={() => setSelectedAlert(null)}
-  onTreatConfirm={handleTreatAlert}
-/>
-
+        alert={selectedAlert}
+        onClose={() => setSelectedAlert(null)}
+        onTreatConfirm={handleTreatAlert}
+      />
     </div>
   );
 }

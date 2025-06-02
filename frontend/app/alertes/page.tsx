@@ -274,13 +274,10 @@ export default function AlertesPage() {
                   <TableCell>
                     <div className="w-[80px] h-[45px] relative rounded overflow-hidden">
                       <Image
-                        src={
-                          isValidMediaReference(alert.media_reference)
-                            ? alert.media_reference!
-                            : "/placeholder.svg"
-                        }
+                        src={alert.media_reference || "/placeholder.svg"}
                         alt="Incident"
-                        fill
+                        width={300}
+                        height={200}
                         className="object-cover"
                       />
                     </div>
@@ -342,17 +339,16 @@ export default function AlertesPage() {
                         />
                       </Button>
                       <Button
-  variant="ghost"
-  size="icon"
-  onClick={() => {
-    const downloadUrl = `http://localhost:8000/alerts/${alert.alert_id}/pdf`;
-    window.open(downloadUrl, "_blank");
-  }}
-  title="Télécharger le rapport PDF"
->
-  <Download className="h-4 w-4" />
-</Button>
-
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const downloadUrl = `http://localhost:8000/alerts/${alert.alert_id}/pdf`;
+                          window.open(downloadUrl, "_blank");
+                        }}
+                        title="Télécharger le rapport PDF"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
