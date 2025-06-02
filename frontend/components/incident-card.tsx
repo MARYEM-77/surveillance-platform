@@ -50,7 +50,10 @@ export function IncidentCard({
     <Card className="overflow-hidden">
       <div className="relative aspect-video">
         <Image
-          src={`/placeholder.svg?height=200&width=400&text=${type === "fire" ? "Feu" : type === "weapon" ? "Arme" : "Visage"}`}
+          src={
+            props.image ??
+            `/placeholder.svg?height=200&width=400&text=${type === "fire" ? "Feu" : type === "weapon" ? "Arme" : "Visage"}`
+          }
           alt={title}
           fill
           className="object-cover"
@@ -74,15 +77,16 @@ export function IncidentCard({
       </CardContent>
       <CardFooter className="p-4 pt-0 flex justify-between gap-2">
         <Button
-  variant="ghost"
-  size="sm"
-  onClick={() => {
-    const downloadUrl = `http://localhost:8000/alerts/${props.alertId}/pdf`;
-    window.open(downloadUrl, "_blank");
-  }}
-><Download className="h-4 w-4" />
-   PDF
-</Button>
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            const downloadUrl = `http://localhost:8000/alerts/${props.alertId}/pdf`;
+            window.open(downloadUrl, "_blank");
+          }}
+        >
+          <Download className="h-4 w-4" />
+          PDF
+        </Button>
 
         <Button
           size="sm"

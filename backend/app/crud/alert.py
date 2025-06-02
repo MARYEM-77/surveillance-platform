@@ -5,8 +5,16 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 from datetime import date
 from typing import Optional
+from fastapi.responses import JSONResponse
+import os
+
 
 from collections import Counter
+
+
+# Chemin local vers le dossier où sont stockées les images
+EXTERNAL_MEDIA_DIR = "C:/Users/Meryem/Models/Models/output"
+EXTERNAL_MEDIA_URL = "http://localhost:8000/external-media" 
 
 def create_alert(db: Session, alert: AlertCreate):
     db_alert = AlertModel(**alert.dict())
@@ -371,19 +379,37 @@ def get_ALLalerts(
         query = query.filter(AlertModel.detection_type == type)
 
     if statut and statut != "all":
-       query = query.filter(AlertModel.statut.ilike(statut))
-
-
-
+        query = query.filter(AlertModel.statut.ilike(statut))
 
     if date_from:
-       query = query.filter(AlertModel.timestamp >= datetime.combine(date_from, datetime.min.time()))
+        query = query.filter(AlertModel.timestamp >= datetime.combine(date_from, datetime.min.time()))
 
     if date_to:
-       query = query.filter(AlertModel.timestamp <= datetime.combine(date_to, datetime.max.time()))
-
+        query = query.filter(AlertModel.timestamp <= datetime.combine(date_to, datetime.max.time()))
 
     total = query.count()
     results = query.order_by(AlertModel.timestamp.desc()).offset(skip).limit(limit).all()
 
-    return results, total
+    alerts_list = []
+    for alert in results:
+        media_path = alert.media_reference
+        filename = os.path.basename(media_path) if media_path else None
+
+        # Construire l'URL publique à partir du point de montage external-media
+        media_url = f"{EXTERNAL_MEDIA_URL}/{filename}" if filename else None
+
+        print("==== DEBUG INFO ====")
+        print("media_path:", media_path)
+        print("filename:", filename)
+        print("Does file exist?:", os.path.exists(os.path.join(EXTERNAL_MEDIA_DIR, filename)) if filename else "No file")
+
+
+        alerts_list.append({
+            "alert_id": alert.alert_id,
+            "timestamp": alert.timestamp.isoformat(),
+            "detection_type": alert.detection_type,
+            "statut": alert.statut,
+            "media_reference": media_url,
+        })
+
+    return alerts_list, total

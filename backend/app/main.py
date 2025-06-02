@@ -1,4 +1,5 @@
 import sys
+from fastapi.staticfiles import StaticFiles
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/..")
 from fastapi import FastAPI, Depends
@@ -28,6 +29,13 @@ from fastapi import HTTPException
 
 app = FastAPI()
 
+EXTERNAL_MEDIA_DIR = "C:/Users/Meryem/Models/Models/output"
+EXTERNAL_MEDIA_URL = "/external-media"
+print("== Vérification du dossier media ==")
+print("EXISTS ?", os.path.exists(EXTERNAL_MEDIA_DIR))  # Doit être True
+print("FILES :", os.listdir(EXTERNAL_MEDIA_DIR))       # Doit contenir les fichiers image
+
+app.mount(EXTERNAL_MEDIA_URL, StaticFiles(directory=EXTERNAL_MEDIA_DIR), name="external-media")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],  # ou ["*"] pour test
@@ -35,6 +43,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 
 def get_db():
@@ -139,7 +149,6 @@ def alerts_by_day_of_month(db: Session = Depends(get_db)):
 
 
 #PArtie MAryem (2eme page)
-
 @app.get("/alerts/AllaLerts")
 def read_alerts(
     db: Session = Depends(get_db),
@@ -163,24 +172,12 @@ def read_alerts(
     )
 
     return {
-        "data": [
-            {
-                "alert_id": alert.alert_id,
-                "detection_type": alert.detection_type,
-                "location": alert.location,
-                "timestamp": alert.timestamp.isoformat(),
-                "media_reference": alert.media_reference,
-                "statut": alert.statut,
-            }
-            for alert in results
-        ],
+        "data": results,
         "total": total,
         "skip": skip,
         "limit": limit,
     }
-    
-    
-    
+
     
 #route pour télécharger rapport
 from fastapi.responses import FileResponse
